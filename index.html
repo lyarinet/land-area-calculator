@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Land Area Converter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -23,89 +24,126 @@
       margin: 10px 0;
       font-size: 16px;
       border-radius: 4px;
+      border: none;
     }
     button {
       background-color: orange;
       color: white;
-      border: none;
       cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: darkorange;
     }
     .results {
       margin-top: 20px;
+      word-break: break-word;
+    }
+    .small {
+      font-size: 13px;
+      color: #ccc;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Land Area Converter</h2>
-    <label>Detected Country: <span id="countryName">Detecting...</span></label>
 
-    <label>Enter Area:</label>
+    <label for="countryName">Detected Country: <span id="countryName">Detecting...</span></label>
+
+    <label for="inputArea">Enter Area:</label>
     <input type="text" id="inputArea" placeholder="e.g. 2160 OR 24x48">
 
-    <label>Select Marla Standard:</label>
+    <label for="marlaSelect">Select Marla Standard:</label>
     <select id="marlaSelect">
       <option value="272.25">Karachi Marla (272.25 sq ft)</option>
       <option value="250">British Marla (250 sq ft)</option>
       <option value="225">Punjab Marla (225 sq ft)</option>
     </select>
 
-    <button onclick="convert()">Convert</button>
+    <button onclick="copyResults()">Copy Results</button>
     <div class="results" id="resultBox"></div>
   </div>
 
   <script>
+    let marlaSelect = document.getElementById("marlaSelect");
+
     // Auto-detect country
     fetch("https://ipapi.co/json/")
       .then(response => response.json())
       .then(data => {
         document.getElementById("countryName").innerText = data.country_name;
-        const select = document.getElementById("marlaSelect");
-
         if (data.country_code === "PK") {
-          select.value = "272.25"; // Karachi standard
+          marlaSelect.value = "272.25";
         } else if (data.country_code === "GB") {
-          select.value = "250"; // British
+          marlaSelect.value = "250";
         } else {
-          select.value = "272.25";
+          marlaSelect.value = "272.25";
         }
+        convert(); // trigger conversion after default set
+      })
+      .catch(() => {
+        document.getElementById("countryName").innerText = "Unknown";
+        marlaSelect.value = "272.25";
+        convert();
       });
+
+    document.getElementById('inputArea').addEventListener('input', convert);
+    document.getElementById('marlaSelect').addEventListener('change', convert);
 
     function convert() {
       const rawInput = document.getElementById('inputArea').value.trim().toLowerCase();
       const marlaSize = parseFloat(document.getElementById('marlaSelect').value);
+      const resultBox = document.getElementById("resultBox");
       let sqft = 0;
 
-      // Handle "width x length" input like 24x48
       const match = rawInput.match(/^(\d+(\.\d+)?)\s*[x×]\s*(\d+(\.\d+)?)$/);
       if (match) {
-        const width = parseFloat(match[1]);
-        const length = parseFloat(match[3]);
-        sqft = width * length;
+        sqft = parseFloat(match[1]) * parseFloat(match[3]);
       } else if (!isNaN(rawInput)) {
         sqft = parseFloat(rawInput);
       } else {
-        alert("Please enter valid area (e.g., 2160 OR 24x48)");
+        resultBox.innerHTML = `<span style="color: red;">⚠️ Invalid input. Please enter area like "2160" or "24x48".</span>`;
         return;
       }
 
+      // Conversions
       const marla = sqft / marlaSize;
       const gaz = sqft / 9;
       const sqm = sqft / 10.7639;
       const kanal = sqft / 5445;
       const acre = sqft / 43560;
+      const sqinch = sqft * 144;
+      const sqcm = sqft * 929.0304;
+      const hectare = sqft / 107639;
+      const bighaPK = sqft / 27225;
+      const bighaIN = sqft / 27000;
 
       const result = `
-        <strong>Area:</strong> ${sqft} sq ft<br><br>
-        <strong>Results:</strong><br>
+        <strong>Area:</strong> ${sqft.toFixed(2)} sq ft<br><br>
+        <strong>Converted Units:</strong><br>
         • Marla (${marlaSize} sq ft): <strong>${marla.toFixed(2)}</strong><br>
         • Square Yards (Gaz): <strong>${gaz.toFixed(2)}</strong><br>
-        • Square Meters: <strong>${sqm.toFixed(2)} m²</strong><br>
         • Kanal: <strong>${kanal.toFixed(3)}</strong><br>
-        • Acres: <strong>${acre.toFixed(4)}</strong>
+        • Acres: <strong>${acre.toFixed(4)}</strong><br>
+        • Square Meters: <strong>${sqm.toFixed(2)} m²</strong><br>
+        • Square Inches: <strong>${sqinch.toFixed(2)} in²</strong><br>
+        • Square Centimeters: <strong>${sqcm.toFixed(2)} cm²</strong><br>
+        • Hectares: <strong>${hectare.toFixed(5)} ha</strong><br>
+        • Bigha (Pakistan): <strong>${bighaPK.toFixed(3)}</strong><br>
+        • Bigha (India - UP): <strong>${bighaIN.toFixed(3)}</strong><br>
+        <span class="small">Click "Copy Results" to save</span>
       `;
+      resultBox.innerHTML = result;
+    }
 
-      document.getElementById("resultBox").innerHTML = result;
+    function copyResults() {
+      const resultText = document.getElementById("resultBox").innerText;
+      if (resultText) {
+        navigator.clipboard.writeText(resultText).then(() => {
+          alert("Results copied to clipboard!");
+        });
+      }
     }
   </script>
 </body>
