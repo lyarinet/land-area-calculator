@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Land Area Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1e1e1e;
+      color: #ffffff;
+      padding: 20px;
+    }
+    .container {
+      max-width: 450px;
+      margin: auto;
+      background: #2c2c2c;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 4px;
+    }
+    button {
+      background-color: orange;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .results {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Land Area Converter</h2>
+    <label>Detected Country: <span id="countryName">Detecting...</span></label>
+
+    <label>Enter Area:</label>
+    <input type="text" id="inputArea" placeholder="e.g. 2160 OR 24x48">
+
+    <label>Select Marla Standard:</label>
+    <select id="marlaSelect">
+      <option value="272.25">Karachi Marla (272.25 sq ft)</option>
+      <option value="250">British Marla (250 sq ft)</option>
+      <option value="225">Punjab Marla (225 sq ft)</option>
+    </select>
+
+    <button onclick="convert()">Convert</button>
+    <div class="results" id="resultBox"></div>
+  </div>
+
+  <script>
+    // Auto-detect country
+    fetch("https://ipapi.co/json/")
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("countryName").innerText = data.country_name;
+        const select = document.getElementById("marlaSelect");
+
+        if (data.country_code === "PK") {
+          select.value = "272.25"; // Karachi standard
+        } else if (data.country_code === "GB") {
+          select.value = "250"; // British
+        } else {
+          select.value = "272.25";
+        }
+      });
+
+    function convert() {
+      const rawInput = document.getElementById('inputArea').value.trim().toLowerCase();
+      const marlaSize = parseFloat(document.getElementById('marlaSelect').value);
+      let sqft = 0;
+
+      // Handle "width x length" input like 24x48
+      const match = rawInput.match(/^(\d+(\.\d+)?)\s*[x×]\s*(\d+(\.\d+)?)$/);
+      if (match) {
+        const width = parseFloat(match[1]);
+        const length = parseFloat(match[3]);
+        sqft = width * length;
+      } else if (!isNaN(rawInput)) {
+        sqft = parseFloat(rawInput);
+      } else {
+        alert("Please enter valid area (e.g., 2160 OR 24x48)");
+        return;
+      }
+
+      const marla = sqft / marlaSize;
+      const gaz = sqft / 9;
+      const sqm = sqft / 10.7639;
+      const kanal = sqft / 5445;
+      const acre = sqft / 43560;
+
+      const result = `
+        <strong>Area:</strong> ${sqft} sq ft<br><br>
+        <strong>Results:</strong><br>
+        • Marla (${marlaSize} sq ft): <strong>${marla.toFixed(2)}</strong><br>
+        • Square Yards (Gaz): <strong>${gaz.toFixed(2)}</strong><br>
+        • Square Meters: <strong>${sqm.toFixed(2)} m²</strong><br>
+        • Kanal: <strong>${kanal.toFixed(3)}</strong><br>
+        • Acres: <strong>${acre.toFixed(4)}</strong>
+      `;
+
+      document.getElementById("resultBox").innerHTML = result;
+    }
+  </script>
+</body>
+</html>
