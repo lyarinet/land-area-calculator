@@ -28,9 +28,8 @@ A lightweight and user-friendly web-based tool for converting land area between 
 
 ## 🖼️ Screenshot
 
-<img width="551" height="626" alt="image" src="https://github.com/user-attachments/assets/be86ccd1-7b8b-4c60-8e0e-b5ab95d87eb2" />
+<img width="551" height="626" alt="image" src="https://github.com/user-attachments/assets/68cadc18-bc8d-428c-a720-2d5d7eae2fc9" />
 
-)
 
 ## 🛠️ Tech Stack
 
