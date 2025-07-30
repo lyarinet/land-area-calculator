@@ -43,13 +43,17 @@
       font-size: 13px;
       color: #ccc;
     }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Land Area Converter</h2>
 
-    <label for="countryName">Detected Country: <span id="countryName">Detecting...</span></label>
+    <label>Detected Country: <span id="countryName">Detecting...</span></label>
 
     <label for="inputArea">Enter Area:</label>
     <input type="text" id="inputArea" placeholder="e.g. 2160 OR 24x48">
@@ -66,23 +70,27 @@
   </div>
 
   <script>
-    let marlaSelect = document.getElementById("marlaSelect");
+    const marlaSelect = document.getElementById("marlaSelect");
 
-    // Auto-detect country
-    fetch("https://ipapi.co/json/")
-      .then(response => response.json())
+    // Country detection using ipwho.is
+    fetch("https://ipwho.is/")
+      .then(res => {
+        if (!res.ok) throw new Error("API request failed");
+        return res.json();
+      })
       .then(data => {
-        document.getElementById("countryName").innerText = data.country_name;
+        document.getElementById("countryName").innerText = data.country || "Unknown";
         if (data.country_code === "PK") {
           marlaSelect.value = "272.25";
         } else if (data.country_code === "GB") {
           marlaSelect.value = "250";
         } else {
-          marlaSelect.value = "272.25";
+          marlaSelect.value = "272.25"; // default
         }
-        convert(); // trigger conversion after default set
+        convert(); // trigger after setting
       })
-      .catch(() => {
+      .catch(error => {
+        console.warn("Country detection failed:", error);
         document.getElementById("countryName").innerText = "Unknown";
         marlaSelect.value = "272.25";
         convert();
@@ -107,7 +115,6 @@
         return;
       }
 
-      // Conversions
       const marla = sqft / marlaSize;
       const gaz = sqft / 9;
       const sqm = sqft / 10.7639;
