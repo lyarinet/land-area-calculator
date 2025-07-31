@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Land Area Converter</title>
   <link rel="manifest" href="manifest.json" />
   <style>
@@ -17,7 +17,6 @@
       justify-content: center;
       min-height: 100vh;
     }
-
     .container {
       width: 100%;
       max-width: 500px;
@@ -26,19 +25,16 @@
       border-radius: 12px;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
     }
-
-    h2 {
+    h2, h3 {
       text-align: center;
       color: orange;
       margin-bottom: 15px;
     }
-
     label {
       display: block;
       margin-top: 15px;
       font-weight: bold;
     }
-
     input, select, button {
       width: 100%;
       padding: 12px;
@@ -50,7 +46,6 @@
       color: white;
       box-sizing: border-box;
     }
-
     button {
       background: orange;
       border: none;
@@ -58,67 +53,76 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-
     button:hover {
       background: darkorange;
     }
-
     .results {
       margin-top: 20px;
       padding: 15px;
       background: #1e1e1e;
       border-radius: 8px;
     }
-
     .results ul {
       list-style: none;
       padding-left: 0;
     }
-
     .results li {
       padding: 4px 0;
     }
-
     #errorBox {
       color: red;
       font-size: 14px;
       margin-top: 10px;
       display: none;
     }
-
     .small {
       font-size: 12px;
       color: #bbb;
       text-align: center;
       margin-top: 10px;
     }
+    hr {
+      margin: 30px 0 15px;
+      border: 0;
+      border-top: 1px solid #444;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Land Area Converter</h2>
-
     <label>Detected Country: <span id="countryName">Detecting...</span></label>
-
     <label for="inputArea">Enter Area (e.g., 2160 or 24x48):</label>
     <input type="text" id="inputArea" placeholder="Area in sq ft or dimension">
-
     <label for="marlaSelect">Select Marla Standard:</label>
     <select id="marlaSelect">
       <option value="272.25">Karachi Marla (272.25 sq ft)</option>
       <option value="250">British Marla (250 sq ft)</option>
       <option value="225">Punjab Marla (225 sq ft)</option>
     </select>
-
     <label for="customUnit">Or use custom unit (sq ft per Marla):</label>
     <input type="number" id="customUnit" placeholder="Optional custom unit">
-
     <div id="errorBox"></div>
-
     <button id="copyButton">Copy Results</button>
     <button onclick="location.reload()">Clear</button>
-
     <div class="results" id="resultBox" aria-live="polite"></div>
+
+    <canvas id="plotCanvas" width="400" height="300" style="margin-top:20px; background:#fff; border-radius:6px;"></canvas>
+    <div class="small" id="plotLabel">Plot preview will appear here</div>
+
+    <hr>
+    <h3>Reverse Conversion</h3>
+    <label for="reverseUnit">Select Unit:</label>
+    <select id="reverseUnit">
+      <option value="marla">Marla</option>
+      <option value="kanal">Kanal</option>
+      <option value="acre">Acre</option>
+      <option value="bighaPK">Bigha (Pakistan)</option>
+      <option value="bighaIN">Bigha (India)</option>
+    </select>
+    <label for="reverseValue">Enter Value:</label>
+    <input type="number" id="reverseValue" placeholder="e.g. 10">
+    <div id="reverseResultBox" class="results"></div>
     <div class="small">App is installable & works offline</div>
   </div>
 
@@ -144,6 +148,29 @@
       const countryNameSpan = document.getElementById("countryName");
       const copyButton = document.getElementById("copyButton");
 
+      const reverseUnit = document.getElementById("reverseUnit");
+      const reverseValue = document.getElementById("reverseValue");
+      const reverseResultBox = document.getElementById("reverseResultBox");
+
+      const plotCanvas = document.getElementById("plotCanvas");
+      const ctx = plotCanvas.getContext("2d");
+      const plotLabel = document.getElementById("plotLabel");
+
+      function drawPlot(w, h) {
+        const maxWidth = 360, maxHeight = 240;
+        let scale = Math.min(maxWidth / w, maxHeight / h);
+        const drawW = w * scale, drawH = h * scale;
+        ctx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
+        ctx.fillStyle = "#eee";
+        ctx.fillRect((400 - drawW) / 2, (300 - drawH) / 2, drawW, drawH);
+        ctx.strokeStyle = "#333";
+        ctx.strokeRect((400 - drawW) / 2, (300 - drawH) / 2, drawW, drawH);
+        ctx.fillStyle = "#000";
+        ctx.font = "14px Arial";
+        ctx.fillText(`${w} ft × ${h} ft`, 160, 290);
+        plotLabel.innerText = `Preview of ${w} ft × ${h} ft`;
+      }
+
       const convert = () => {
         const rawInput = inputArea.value.trim().toLowerCase();
         const custom = parseFloat(customUnit.value);
@@ -152,6 +179,8 @@
         if (!rawInput) {
           resultBox.innerHTML = "";
           errorBox.style.display = "none";
+          ctx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
+          plotLabel.innerText = "Plot preview will appear here";
           return;
         }
 
@@ -164,12 +193,15 @@
           const h = parseFloat(dimensionMatch[2]);
           if (!isNaN(w) && !isNaN(h)) {
             sqft = w * h;
+            drawPlot(w, h);
           } else {
             showError("Invalid dimensions entered.");
             return;
           }
         } else if (numberMatch) {
           sqft = parseFloat(rawInput);
+          ctx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
+          plotLabel.innerText = "Plot preview will appear here";
         } else {
           showError("⚠️ Invalid input. Use 2160 or 24x48 format.");
           return;
@@ -186,8 +218,7 @@
         const sqin = sqft / CONVERSION_FACTORS.SQFT_IN_INCH;
         const sqkm = sqft / CONVERSION_FACTORS.SQFT_IN_KM;
 
-        resultBox.innerHTML = `
-          <p><strong>Total Area: ${sqft.toFixed(2)} sq ft</strong></p>
+        resultBox.innerHTML = `<p><strong>Total Area: ${sqft.toFixed(2)} sq ft</strong></p>
           <ul>
             <li>Marla (${marlaSize} sq ft): <strong>${marla.toFixed(2)}</strong></li>
             <li>Square Yards (Gaz): <strong>${gaz.toFixed(2)}</strong></li>
@@ -199,8 +230,7 @@
             <li>Bigha (India): <strong>${bighaIN.toFixed(3)}</strong></li>
             <li>Square Inches: <strong>${sqin.toFixed(0)}</strong></li>
             <li>Square KM: <strong>${sqkm.toExponential(5)}</strong></li>
-          </ul>
-        `;
+          </ul>`;
         errorBox.style.display = "none";
       };
 
@@ -208,6 +238,8 @@
         errorBox.innerText = msg;
         errorBox.style.display = "block";
         resultBox.innerHTML = "";
+        ctx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
+        plotLabel.innerText = "Plot preview will appear here";
       };
 
       const copyResults = () => {
@@ -224,26 +256,44 @@
         }
       };
 
+      const reverseConversionFactors = {
+        marla: () => parseFloat(customUnit.value) || parseFloat(marlaSelect.value),
+        kanal: CONVERSION_FACTORS.SQFT_IN_KANAL,
+        acre: CONVERSION_FACTORS.SQFT_IN_ACRE,
+        bighaPK: CONVERSION_FACTORS.SQFT_IN_BIGHA_PK,
+        bighaIN: CONVERSION_FACTORS.SQFT_IN_BIGHA_IN
+      };
+
+      const convertReverse = () => {
+        const unit = reverseUnit.value;
+        const val = parseFloat(reverseValue.value);
+        if (!unit || isNaN(val)) {
+          reverseResultBox.innerHTML = "";
+          return;
+        }
+        const factor = typeof reverseConversionFactors[unit] === "function"
+          ? reverseConversionFactors[unit]()
+          : reverseConversionFactors[unit];
+        const sqft = val * factor;
+        reverseResultBox.innerHTML = `<p><strong>${val} ${unit} = ${sqft.toFixed(2)} sq ft</strong></p>
+          <p><small>Use this value in the main input if needed.</small></p>`;
+      };
+
       inputArea.addEventListener("input", convert);
       marlaSelect.addEventListener("change", convert);
       customUnit.addEventListener("input", convert);
       copyButton.addEventListener("click", copyResults);
+      reverseUnit.addEventListener("change", convertReverse);
+      reverseValue.addEventListener("input", convertReverse);
 
       fetch("https://ipwho.is/")
-        .then((res) => res.json())
-        .then((data) => {
+        .then(res => res.json())
+        .then(data => {
           countryNameSpan.innerText = data.country || "Unknown";
-          if (data.country_code === "PK") {
-            marlaSelect.value = "225";
-          } else if (data.country_code === "GB") {
-            marlaSelect.value = "250";
-          } else {
-            marlaSelect.value = "272.25";
-          }
+          marlaSelect.value = data.country_code === "PK" ? "225" :
+                              data.country_code === "GB" ? "250" : "272.25";
         })
-        .catch(() => {
-          countryNameSpan.innerText = "N/A";
-        })
+        .catch(() => { countryNameSpan.innerText = "N/A"; })
         .finally(convert);
 
       if ("serviceWorker" in navigator) {
@@ -251,5 +301,15 @@
       }
     });
   </script>
+  <script>
+  window.onload = function() {
+    const canvas = document.getElementById('plotCanvas');
+    if (canvas && canvas.getContext) {
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#3498db';
+      ctx.fillRect(50, 50, 100, 100); // Draw a blue square
+    }
+  };
+</script>
 </body>
 </html>
