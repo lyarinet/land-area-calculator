@@ -86,6 +86,24 @@
       border: 0;
       border-top: 1px solid #444;
     }
+    #aspectRatioBox {
+      margin: 10px 0;
+      display: none;
+    }
+    .preset-btn {
+      background: #444;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .preset-btn:hover {
+      background: #555;
+    }
   </style>
 </head>
 <body>
@@ -110,6 +128,28 @@
     <canvas id="plotCanvas" width="400" height="300" style="margin-top:20px; background:#fff; border-radius:6px;"></canvas>
     <div class="small" id="plotLabel">Plot preview will appear here</div>
 
+    <div id="aspectRatioBox">
+      <label for="aspectRatioSelect" style="color:#fff;">Select Plot Shape:</label>
+      <select id="aspectRatioSelect">
+        <option value="1">Square (1:1)</option>
+        <option value="2">Rectangle (2:1)</option>
+        <option value="0.5">Rectangle (1:2)</option>
+      </select>
+    </div>
+
+    <!-- Preset Plot Sizes -->
+    <div style="margin:10px 0;">
+      <button class="preset-btn" data-plot="1125">5 Marla (1125 sq ft)</button>
+      <button class="preset-btn" data-plot="2250">10 Marla (2250 sq ft)</button>
+      <button class="preset-btn" data-plot="4500">1 Kanal (4500 sq ft)</button>
+    </div>
+
+    <!-- Recent Conversions History -->
+    <div style="margin:10px 0;">
+      <strong style="color:#fff;">Recent Conversions:</strong>
+      <ul id="historyList" style="color:#fff; margin:5px 0 0 15px; padding:0;"></ul>
+    </div>
+
     <hr>
     <h3>Reverse Conversion</h3>
     <label for="reverseUnit">Select Unit:</label>
@@ -124,6 +164,9 @@
     <input type="number" id="reverseValue" placeholder="e.g. 10">
     <div id="reverseResultBox" class="results"></div>
     <div class="small">App is installable & works offline</div>
+
+    <!-- Download button for plot image -->
+    <button id="downloadPlotBtn" style="margin:10px 0;">Download Plot Image</button>
   </div>
 
   <script>
@@ -302,55 +345,145 @@
     });
   </script>
   <script>
-function drawPlot(areaInput) {
+function drawPlot(areaInput, aspectRatio = 1) {
   const canvas = document.getElementById('plotCanvas');
   const label = document.getElementById('plotLabel');
+  const errorBox = document.getElementById('errorBox');
+  const inputArea = document.getElementById('inputArea');
   if (!canvas || !label) return;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   let width = 0, height = 0;
+  let valid = true;
   if (/^\d+\s*x\s*\d+$/i.test(areaInput)) {
     // Format: 24x48
     [width, height] = areaInput.toLowerCase().split('x').map(Number);
+    document.getElementById('aspectRatioBox').style.display = "none";
   } else if (!isNaN(Number(areaInput)) && areaInput.trim() !== "") {
-    // Format: 2160 (assume square)
-    width = height = Math.sqrt(Number(areaInput));
-  } else {
+    // Single area, show aspect ratio selector
+    document.getElementById('aspectRatioBox').style.display = "";
+    const area = Number(areaInput);
+    width = Math.sqrt(area * aspectRatio);
+    height = area / width;
+  } else if (areaInput.trim() === "") {
     label.textContent = "Plot preview will appear here";
+    document.getElementById('aspectRatioBox').style.display = "none";
+    errorBox.style.display = "none";
+    inputArea.style.border = "";
     return;
+  } else {
+    // Invalid input
+    label.textContent = "Plot preview will appear here";
+    errorBox.textContent = "Please enter a valid area (e.g., 2160 or 24x48)";
+    errorBox.style.display = "block";
+    inputArea.style.border = "2px solid #e74c3c";
+    valid = false;
   }
 
-  // Scale to fit canvas
-  const scale = Math.min(canvas.width / width, canvas.height / height) * 0.8;
-  const plotW = width * scale;
-  const plotH = height * scale;
-  const offsetX = (canvas.width - plotW) / 2;
-  const offsetY = (canvas.height - plotH) / 2;
+  if (valid) {
+    errorBox.style.display = "none";
+    inputArea.style.border = "";
+    // Scale to fit canvas
+    const scale = Math.min(canvas.width / width, canvas.height / height) * 0.8;
+    const plotW = width * scale;
+    const plotH = height * scale;
+    const offsetX = (canvas.width - plotW) / 2;
+    const offsetY = (canvas.height - plotH) / 2;
 
-  ctx.fillStyle = "#3498db";
-  ctx.fillRect(offsetX, offsetY, plotW, plotH);
+    ctx.fillStyle = "#3498db";
+    ctx.fillRect(offsetX, offsetY, plotW, plotH);
 
-  ctx.strokeStyle = "#222";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(offsetX, offsetY, plotW, plotH);
+    ctx.strokeStyle = "#222";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(offsetX, offsetY, plotW, plotH);
 
-  ctx.fillStyle = "#000";
-  ctx.font = "16px Arial";
-  ctx.fillText(`${Math.round(width)} x ${Math.round(height)}`, offsetX + 10, offsetY + 25);
+    // Draw width and height labels on sides
+    ctx.fillStyle = "#000";
+    ctx.font = "16px Arial";
+    ctx.fillText(`${Math.round(width)} ft`, offsetX + plotW / 2 - 30, offsetY + plotH + 20);
+    ctx.save();
+    ctx.translate(offsetX - 30, offsetY + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(`${Math.round(height)} ft`, 0, 0);
+    ctx.restore();
 
-  label.textContent = `Plot: ${Math.round(width)} x ${Math.round(height)} ft`;
+    // Draw dimensions inside rectangle
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 16px Arial";
+    ctx.fillText(`${Math.round(width)} x ${Math.round(height)}`, offsetX + 10, offsetY + 25);
+
+    label.textContent = `Plot: ${Math.round(width)} x ${Math.round(height)} ft`;
+  }
 }
 
-document.getElementById('inputArea').addEventListener('input', function(e) {
-  drawPlot(e.target.value);
+const inputArea = document.getElementById('inputArea');
+const aspectRatioSelect = document.getElementById('aspectRatioSelect');
+
+inputArea.addEventListener('input', function(e) {
+  drawPlot(e.target.value, Number(aspectRatioSelect.value));
 });
 
-// Draw initial plot if input has value
-window.addEventListener('DOMContentLoaded', function() {
-  const input = document.getElementById('inputArea');
-  if (input.value) drawPlot(input.value);
+aspectRatioSelect.addEventListener('change', function() {
+  drawPlot(inputArea.value, Number(aspectRatioSelect.value));
 });
+
+window.addEventListener('DOMContentLoaded', function() {
+  if (inputArea.value) drawPlot(inputArea.value, Number(aspectRatioSelect.value));
+});
+
+// Download plot as image
+document.getElementById('downloadPlotBtn').addEventListener('click', function() {
+  const canvas = document.getElementById('plotCanvas');
+  const link = document.createElement('a');
+  link.download = 'plot.png';
+  link.href = canvas.toDataURL();
+  link.click();
+});
+
+// --- Preset Plot Sizes ---
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.getElementById('inputArea').value = this.getAttribute('data-plot');
+    drawPlot(this.getAttribute('data-plot'), Number(document.getElementById('aspectRatioSelect').value));
+    saveToHistory(this.getAttribute('data-plot'));
+  });
+});
+
+// --- Recent Conversions History ---
+function saveToHistory(areaInput) {
+  let history = JSON.parse(localStorage.getItem('plotHistory') || '[]');
+  if (areaInput && !history.includes(areaInput)) {
+    history.unshift(areaInput);
+    if (history.length > 5) history = history.slice(0, 5);
+    localStorage.setItem('plotHistory', JSON.stringify(history));
+    renderHistory();
+  }
+}
+
+function renderHistory() {
+  let history = JSON.parse(localStorage.getItem('plotHistory') || '[]');
+  const list = document.getElementById('historyList');
+  list.innerHTML = '';
+  history.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    li.style.cursor = 'pointer';
+    li.onclick = function() {
+      document.getElementById('inputArea').value = item;
+      drawPlot(item, Number(document.getElementById('aspectRatioSelect').value));
+    };
+    list.appendChild(li);
+  });
+}
+
+// Save to history on input
+document.getElementById('inputArea').addEventListener('change', function(e) {
+  saveToHistory(e.target.value);
+});
+
+// Initial render
+window.addEventListener('DOMContentLoaded', renderHistory);
 </script>
 </body>
 </html>
