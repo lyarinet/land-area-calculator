@@ -1,10 +1,17 @@
-# 🌍 Land Area Converter
+# Land Area Converter (PWA)
 
-A lightweight and user-friendly web-based tool for converting land area between multiple units, including regional standards like **Karachi Marla**, **Punjab Marla**, and **British Marla**.
+Convert land area between sq ft, Marla, Kanal, Acres, Bigha, and more.
 
 ## 📌 Demo
 
 > 🧪 Try it live: [https://graceful-peony-2925aa.netlify.app/]
+
+
+📱 Mobile-friendly  
+🛰️ Auto-detect country  
+📦 Installable PWA  
+🚀 Works offline via service worker  
+
 
 ## ✨ Features
 
