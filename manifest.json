@@ -1,10 +1,16 @@
 {
   "name": "Land Area Converter",
   "short_name": "Area Converter",
+  "id": "/",
+  "description": "Convert land areas between square feet, marla, kanal, acres, bigha and more.",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#1e1e1e",
-  "theme_color": "orange",
+  "theme_color": "#ffa500",
+  "orientation": "portrait",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "icons": [
     {
       "src": "icon.png",
