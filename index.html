@@ -1,103 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Land Area Converter</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json" />
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: Arial, sans-serif;
       background: #1e1e1e;
-      color: #ffffff;
+      color: #fff;
+      margin: 0;
       padding: 20px;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       min-height: 100vh;
-      margin: 0;
     }
+
     .container {
       width: 100%;
-      max-width: 450px;
-      margin: auto;
+      max-width: 500px;
       background: #2c2c2c;
-      padding: 20px 25px;
+      padding: 25px;
       border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
     }
-    input, select, button {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #444;
-      background-color: #333;
-      color: #fff;
-      box-sizing: border-box; /* Ensures padding doesn't affect width */
-    }
-    button {
-      background-color: orange;
-      color: white;
-      cursor: pointer;
-      border: none;
-      font-weight: bold;
-      transition: background-color 0.3s, transform 0.1s;
-    }
-    button:hover {
-      background-color: darkorange;
-    }
-    button:active {
-      transform: scale(0.98);
-    }
-    button:disabled {
-        background-color: #555;
-        cursor: not-allowed;
-    }
-    .results {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #1e1e1e;
-      border-radius: 6px;
-      word-break: break-word;
-    }
-    .results ul {
-      list-style-type: none;
-      padding-left: 0;
-      margin: 10px 0 0 0;
-    }
-    .results li {
-      padding: 4px 0;
-    }
-    .small {
-      font-size: 13px;
-      color: #ccc;
-      display: block;
-      margin-top: 10px;
+
+    h2 {
       text-align: center;
+      color: orange;
+      margin-bottom: 15px;
     }
+
     label {
       display: block;
       margin-top: 15px;
-      font-weight: 500;
-      color: #ddd;
+      font-weight: bold;
     }
-    h2 {
-        text-align: center;
-        margin-bottom: 20px;
-        color: orange;
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      border-radius: 6px;
+      font-size: 16px;
+      border: 1px solid #444;
+      background: #333;
+      color: white;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: orange;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: darkorange;
+    }
+
+    .results {
+      margin-top: 20px;
+      padding: 15px;
+      background: #1e1e1e;
+      border-radius: 8px;
+    }
+
+    .results ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .results li {
+      padding: 4px 0;
+    }
+
+    #errorBox {
+      color: red;
+      font-size: 14px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #bbb;
+      text-align: center;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-
   <div class="container">
     <h2>Land Area Converter</h2>
 
     <label>Detected Country: <span id="countryName">Detecting...</span></label>
 
-    <label for="inputArea">Enter Area:</label>
-    <input type="text" id="inputArea" placeholder="e.g. 2160 or 24x48">
+    <label for="inputArea">Enter Area (e.g., 2160 or 24x48):</label>
+    <input type="text" id="inputArea" placeholder="Area in sq ft or dimension">
 
     <label for="marlaSelect">Select Marla Standard:</label>
     <select id="marlaSelect">
@@ -106,18 +110,20 @@
       <option value="225">Punjab Marla (225 sq ft)</option>
     </select>
 
+    <label for="customUnit">Or use custom unit (sq ft per Marla):</label>
+    <input type="number" id="customUnit" placeholder="Optional custom unit">
+
+    <div id="errorBox"></div>
+
     <button id="copyButton">Copy Results</button>
-    
-    <!-- Results will be displayed here. `aria-live` helps with accessibility -->
+    <button onclick="location.reload()">Clear</button>
+
     <div class="results" id="resultBox" aria-live="polite"></div>
+    <div class="small">App is installable & works offline</div>
   </div>
 
   <script>
-    // Encapsulate all code in a DOMContentLoaded event listener to ensure
-    // the HTML is fully loaded before the script runs.
-    document.addEventListener('DOMContentLoaded', () => {
-
-      // --- 1. Constants and Configuration ---
+    document.addEventListener("DOMContentLoaded", () => {
       const CONVERSION_FACTORS = {
         SQFT_IN_YARD: 9,
         SQFT_IN_METER: 10.7639,
@@ -126,42 +132,49 @@
         SQFT_IN_HECTARE: 107639,
         SQFT_IN_BIGHA_PK: 27225,
         SQFT_IN_BIGHA_IN: 27000,
+        SQFT_IN_INCH: 0.00694444,
+        SQFT_IN_KM: 10763910,
       };
 
-      // --- 2. Cache DOM Elements for better performance ---
-      const inputArea = document.getElementById('inputArea');
-      const marlaSelect = document.getElementById('marlaSelect');
-      const resultBox = document.getElementById('resultBox');
-      const countryNameSpan = document.getElementById('countryName');
-      const copyButton = document.getElementById('copyButton');
+      const inputArea = document.getElementById("inputArea");
+      const marlaSelect = document.getElementById("marlaSelect");
+      const customUnit = document.getElementById("customUnit");
+      const resultBox = document.getElementById("resultBox");
+      const errorBox = document.getElementById("errorBox");
+      const countryNameSpan = document.getElementById("countryName");
+      const copyButton = document.getElementById("copyButton");
 
-      // --- 3. Main Functions ---
       const convert = () => {
         const rawInput = inputArea.value.trim().toLowerCase();
-        const marlaSize = parseFloat(marlaSelect.value);
-        
-        // If input is empty, clear results and exit
+        const custom = parseFloat(customUnit.value);
+        const marlaSize = isNaN(custom) ? parseFloat(marlaSelect.value) : custom;
+
         if (!rawInput) {
-          resultBox.innerHTML = '';
+          resultBox.innerHTML = "";
+          errorBox.style.display = "none";
           return;
         }
 
         let sqft = 0;
-        // Regex to match dimensions like "24x48" or "24.5 x 48.5"
         const dimensionMatch = rawInput.match(/^(\d*\.?\d+)\s*[x×]\s*(\d*\.?\d+)$/);
-        // Regex to check if the input is just a number
         const numberMatch = /^\d*\.?\d+$/.test(rawInput);
-        
+
         if (dimensionMatch) {
-          sqft = parseFloat(dimensionMatch[1]) * parseFloat(dimensionMatch[2]);
+          const w = parseFloat(dimensionMatch[1]);
+          const h = parseFloat(dimensionMatch[2]);
+          if (!isNaN(w) && !isNaN(h)) {
+            sqft = w * h;
+          } else {
+            showError("Invalid dimensions entered.");
+            return;
+          }
         } else if (numberMatch) {
           sqft = parseFloat(rawInput);
         } else {
-          resultBox.innerHTML = `<span style="color: red;">⚠️ Invalid input. Use formats like "2160" or "24x48".</span>`;
+          showError("⚠️ Invalid input. Use 2160 or 24x48 format.");
           return;
         }
-        
-        // Perform calculations using constants
+
         const marla = sqft / marlaSize;
         const gaz = sqft / CONVERSION_FACTORS.SQFT_IN_YARD;
         const sqm = sqft / CONVERSION_FACTORS.SQFT_IN_METER;
@@ -170,11 +183,11 @@
         const hectare = sqft / CONVERSION_FACTORS.SQFT_IN_HECTARE;
         const bighaPK = sqft / CONVERSION_FACTORS.SQFT_IN_BIGHA_PK;
         const bighaIN = sqft / CONVERSION_FACTORS.SQFT_IN_BIGHA_IN;
-        
-        // Generate results using a semantic list for better structure
+        const sqin = sqft / CONVERSION_FACTORS.SQFT_IN_INCH;
+        const sqkm = sqft / CONVERSION_FACTORS.SQFT_IN_KM;
+
         resultBox.innerHTML = `
           <p><strong>Total Area: ${sqft.toFixed(2)} sq ft</strong></p>
-          <strong>Converted Units:</strong>
           <ul>
             <li>Marla (${marlaSize} sq ft): <strong>${marla.toFixed(2)}</strong></li>
             <li>Square Yards (Gaz): <strong>${gaz.toFixed(2)}</strong></li>
@@ -183,64 +196,60 @@
             <li>Square Meters: <strong>${sqm.toFixed(2)} m²</strong></li>
             <li>Hectares: <strong>${hectare.toFixed(5)} ha</strong></li>
             <li>Bigha (Pakistan): <strong>${bighaPK.toFixed(3)}</strong></li>
-            <li>Bigha (India - UP): <strong>${bighaIN.toFixed(3)}</strong></li>
+            <li>Bigha (India): <strong>${bighaIN.toFixed(3)}</strong></li>
+            <li>Square Inches: <strong>${sqin.toFixed(0)}</strong></li>
+            <li>Square KM: <strong>${sqkm.toExponential(5)}</strong></li>
           </ul>
-          <span class="small">Click "Copy Results" to save</span>
         `;
+        errorBox.style.display = "none";
+      };
+
+      const showError = (msg) => {
+        errorBox.innerText = msg;
+        errorBox.style.display = "block";
+        resultBox.innerHTML = "";
       };
 
       const copyResults = () => {
-        const resultText = resultBox.innerText;
-
-        if (resultText && navigator.clipboard) {
-          navigator.clipboard.writeText(resultText).then(() => {
-            // Provide non-blocking feedback instead of an alert
-            const originalText = copyButton.innerText;
+        if (resultBox.innerText) {
+          navigator.clipboard.writeText(resultBox.innerText).then(() => {
+            const original = copyButton.innerText;
             copyButton.innerText = "Copied!";
             copyButton.disabled = true;
             setTimeout(() => {
-              copyButton.innerText = originalText;
+              copyButton.innerText = original;
               copyButton.disabled = false;
-            }, 2000); // Revert after 2 seconds
-          }).catch(err => {
-            console.error("Failed to copy results: ", err);
-            alert("Could not copy results to clipboard.");
+            }, 2000);
           });
         }
       };
 
-      // --- 4. Event Listeners ---
-      inputArea.addEventListener('input', convert);
-      marlaSelect.addEventListener('change', convert);
-      copyButton.addEventListener('click', copyResults);
+      inputArea.addEventListener("input", convert);
+      marlaSelect.addEventListener("change", convert);
+      customUnit.addEventListener("input", convert);
+      copyButton.addEventListener("click", copyResults);
 
-      // --- 5. Initialisation (API Call for Country Detection) ---
       fetch("https://ipwho.is/")
-        .then(res => {
-          if (!res.ok) throw new Error("API request failed");
-          return res.json();
-        })
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           countryNameSpan.innerText = data.country || "Unknown";
-          // Set Marla standard based on country code
           if (data.country_code === "PK") {
-            marlaSelect.value = "225"; // Punjab Marla is very common
+            marlaSelect.value = "225";
           } else if (data.country_code === "GB") {
             marlaSelect.value = "250";
           } else {
-            marlaSelect.value = "272.25"; // Default
+            marlaSelect.value = "272.25";
           }
         })
-        .catch(error => {
-          console.warn("Country detection failed:", error);
+        .catch(() => {
           countryNameSpan.innerText = "N/A";
         })
-        .finally(() => {
-          // Always run an initial conversion after the API call finishes or fails
-          convert();
-        });
+        .finally(convert);
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js");
+      }
     });
   </script>
-
 </body>
 </html>
