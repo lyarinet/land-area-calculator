@@ -302,14 +302,55 @@
     });
   </script>
   <script>
-  window.onload = function() {
-    const canvas = document.getElementById('plotCanvas');
-    if (canvas && canvas.getContext) {
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#3498db';
-      ctx.fillRect(50, 50, 100, 100); // Draw a blue square
-    }
-  };
+function drawPlot(areaInput) {
+  const canvas = document.getElementById('plotCanvas');
+  const label = document.getElementById('plotLabel');
+  if (!canvas || !label) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  let width = 0, height = 0;
+  if (/^\d+\s*x\s*\d+$/i.test(areaInput)) {
+    // Format: 24x48
+    [width, height] = areaInput.toLowerCase().split('x').map(Number);
+  } else if (!isNaN(Number(areaInput)) && areaInput.trim() !== "") {
+    // Format: 2160 (assume square)
+    width = height = Math.sqrt(Number(areaInput));
+  } else {
+    label.textContent = "Plot preview will appear here";
+    return;
+  }
+
+  // Scale to fit canvas
+  const scale = Math.min(canvas.width / width, canvas.height / height) * 0.8;
+  const plotW = width * scale;
+  const plotH = height * scale;
+  const offsetX = (canvas.width - plotW) / 2;
+  const offsetY = (canvas.height - plotH) / 2;
+
+  ctx.fillStyle = "#3498db";
+  ctx.fillRect(offsetX, offsetY, plotW, plotH);
+
+  ctx.strokeStyle = "#222";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(offsetX, offsetY, plotW, plotH);
+
+  ctx.fillStyle = "#000";
+  ctx.font = "16px Arial";
+  ctx.fillText(`${Math.round(width)} x ${Math.round(height)}`, offsetX + 10, offsetY + 25);
+
+  label.textContent = `Plot: ${Math.round(width)} x ${Math.round(height)} ft`;
+}
+
+document.getElementById('inputArea').addEventListener('input', function(e) {
+  drawPlot(e.target.value);
+});
+
+// Draw initial plot if input has value
+window.addEventListener('DOMContentLoaded', function() {
+  const input = document.getElementById('inputArea');
+  if (input.value) drawPlot(input.value);
+});
 </script>
 </body>
 </html>
