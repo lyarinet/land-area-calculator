@@ -1,489 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Land Area Converter</title>
-  <link rel="manifest" href="manifest.json" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #1e1e1e;
-      color: #fff;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .container {
-      width: 100%;
-      max-width: 500px;
-      background: #2c2c2c;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
-    }
-    h2, h3 {
-      text-align: center;
-      color: orange;
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 6px;
-      border-radius: 6px;
-      font-size: 16px;
-      border: 1px solid #444;
-      background: #333;
-      color: white;
-      box-sizing: border-box;
-    }
-    button {
-      background: orange;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    button:hover {
-      background: darkorange;
-    }
-    .results {
-      margin-top: 20px;
-      padding: 15px;
-      background: #1e1e1e;
-      border-radius: 8px;
-    }
-    .results ul {
-      list-style: none;
-      padding-left: 0;
-    }
-    .results li {
-      padding: 4px 0;
-    }
-    #errorBox {
-      color: red;
-      font-size: 14px;
-      margin-top: 10px;
-      display: none;
-    }
-    .small {
-      font-size: 12px;
-      color: #bbb;
-      text-align: center;
-      margin-top: 10px;
-    }
-    hr {
-      margin: 30px 0 15px;
-      border: 0;
-      border-top: 1px solid #444;
-    }
-    #aspectRatioBox {
-      margin: 10px 0;
-      display: none;
-    }
-    .preset-btn {
-      background: #444;
-      color: #fff;
-      border: none;
-      padding: 10px;
-      margin: 5px 0;
-      width: 100%;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    .preset-btn:hover {
-      background: #555;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Land Measurement Calculator</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h2>Land Area Converter</h2>
-    <label>Detected Country: <span id="countryName">Detecting...</span></label>
-    <label for="inputArea">Enter Area (e.g., 2160 or 24x48):</label>
-    <input type="text" id="inputArea" placeholder="Area in sq ft or dimension">
-    <label for="marlaSelect">Select Marla Standard:</label>
-    <select id="marlaSelect">
-      <option value="272.25">Karachi Marla (272.25 sq ft)</option>
-      <option value="250">British Marla (250 sq ft)</option>
-      <option value="225">Punjab Marla (225 sq ft)</option>
-    </select>
-    <label for="customUnit">Or use custom unit (sq ft per Marla):</label>
-    <input type="number" id="customUnit" placeholder="Optional custom unit">
-    <div id="errorBox"></div>
-    <button id="copyButton">Copy Results</button>
-    <button onclick="location.reload()">Clear</button>
-    <div class="results" id="resultBox" aria-live="polite"></div>
+    <div class="container">
+        <h1>🏡 Land Measurement Calculator</h1>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label for="inputType">Input Type:</label>
+                <select id="inputType">
+                    <option value="dimensions">Length × Width (e.g., 48x45)</option>
+                    <option value="area">Single Area Value (e.g., 2160)</option>
+                </select>
+            </div>
 
-    <canvas id="plotCanvas" width="400" height="300" style="margin-top:20px; background:#fff; border-radius:6px;"></canvas>
-    <div class="small" id="plotLabel">Plot preview will appear here</div>
+            <div id="dimensionInputs" class="input-group">
+                <label for="length">Dimensions:</label>
+                <div class="dimension-inputs">
+                    <input type="number" id="length" placeholder="Length" step="0.01">
+                    <div class="multiply-sign">×</div>
+                    <input type="number" id="width" placeholder="Width" step="0.01">
+                </div>
+                <span class="error-message" id="dimension-error"></span>
+            </div>
 
-    <div id="aspectRatioBox">
-      <label for="aspectRatioSelect" style="color:#fff;">Select Plot Shape:</label>
-      <select id="aspectRatioSelect">
-        <option value="1">Square (1:1)</option>
-        <option value="2">Rectangle (2:1)</option>
-        <option value="0.5">Rectangle (1:2)</option>
-      </select>
+            <div id="areaInput" class="input-group" style="display: none;">
+                <label for="areaValue">Area Value:</label>
+                <input type="number" id="areaValue" placeholder="Enter area value" step="0.01">
+                <span class="error-message" id="area-error"></span>
+            </div>
+
+            <div class="input-group">
+                <label for="inputUnit">Input Unit:</label>
+                <select id="inputUnit">
+                    <option value="ft">Feet (ft)</option>
+                    <option value="m">Meters (m)</option>
+                    <option value="yd">Yards (yd)</option>
+                    <option value="guz">Guz (sq yd)</option>
+                    <option value="sqft">Square Feet (sq ft)</option>
+                    <option value="sqm">Square Meters (sq m)</option>
+                    <option value="sqyd">Square Yards (sq yd)</option>
+                    <option value="acre">Acres</option>
+                    <option value="hectare">Hectares</option>
+                </select>
+            </div>
+
+            <button class="calculate-btn">Calculate & Convert</button>
+        </div>
+
+        <div id="results" class="results">
+            <div id="primaryResult" class="result-item primary-result">
+                <span class="result-label">Calculation:</span>
+                <span class="result-value"></span>
+            </div>
+            <div class="conversion-grid" id="conversions"></div>
+        </div>
+
+        <div id="mapSection" class="map-section">
+            <div class="map-header">
+                <h3 class="map-title">📐 Floor Plan Visualization</h3>
+                <div class="map-controls">
+                    <button class="zoom-btn" id="zoomOut">Zoom Out</button>
+                    <button class="zoom-btn" id="zoomIn">Zoom In</button>
+                    <button class="zoom-btn" id="resetZoom">Reset</button>
+                </div>
+            </div>
+            
+            <div class="map-container" id="mapContainer">
+                <div class="floor-plan" id="floorPlan">
+                    <span id="areaText"></span>
+                    <div class="dimension-labels length-label" id="lengthLabel"></div>
+                    <div class="dimension-labels width-label" id="widthLabel"></div>
+                </div>
+            </div>
+            
+            <div class="map-info">
+                <div class="info-item">
+                    <div class="info-label">Length</div>
+                    <div class="info-value" id="displayLength">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Width</div>
+                    <div class="info-value" id="displayWidth">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Total Area</div>
+                    <div class="info-value" id="displayArea">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Perimeter</div>
+                    <div class="info-value" id="displayPerimeter">-</div>
+                </div>
+            </div>
+            
+            <div class="scale-info" id="scaleInfo">
+                Scale: 1 pixel = 1 ft (adjustable with zoom controls)
+            </div>
+        </div>
+
+        <div class="examples">
+            <h3>📝 Example Inputs:</h3>
+            <div class="example-item">48x45 (feet) → 2160 sq ft | 200.67 sq m | 240 guz</div>
+            <div class="example-item">2160 (sq ft) → 200.67 sq m | 240 guz | 0.0496 acres</div>
+            <div class="example-item">100x50 (meters) → 5000 sq m | 53819.55 sq ft | 1.24 acres</div>
+        </div>
     </div>
 
-    <!-- Preset Plot Sizes -->
-    <div style="margin:10px 0;">
-      <button class="preset-btn" data-plot="1125">5 Marla (1125 sq ft)</button>
-      <button class="preset-btn" data-plot="2250">10 Marla (2250 sq ft)</button>
-      <button class="preset-btn" data-plot="4500">1 Kanal (4500 sq ft)</button>
-    </div>
-
-    <!-- Recent Conversions History -->
-    <div style="margin:10px 0;">
-      <strong style="color:#fff;">Recent Conversions:</strong>
-      <ul id="historyList" style="color:#fff; margin:5px 0 0 15px; padding:0;"></ul>
-    </div>
-
-    <hr>
-    <h3>Reverse Conversion</h3>
-    <label for="reverseUnit">Select Unit:</label>
-    <select id="reverseUnit">
-      <option value="marla">Marla</option>
-      <option value="kanal">Kanal</option>
-      <option value="acre">Acre</option>
-      <option value="bighaPK">Bigha (Pakistan)</option>
-      <option value="bighaIN">Bigha (India)</option>
-    </select>
-    <label for="reverseValue">Enter Value:</label>
-    <input type="number" id="reverseValue" placeholder="e.g. 10">
-    <div id="reverseResultBox" class="results"></div>
-    <div class="small">App is installable & works offline</div>
-
-    <!-- Download button for plot image -->
-    <button id="downloadPlotBtn" style="margin:10px 0;">Download Plot Image</button>
-  </div>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const CONVERSION_FACTORS = {
-        SQFT_IN_YARD: 9,
-        SQFT_IN_METER: 10.7639,
-        SQFT_IN_KANAL: 5445,
-        SQFT_IN_ACRE: 43560,
-        SQFT_IN_HECTARE: 107639,
-        SQFT_IN_BIGHA_PK: 27225,
-        SQFT_IN_BIGHA_IN: 27000,
-        SQFT_IN_INCH: 0.00694444,
-        SQFT_IN_KM: 10763910,
-      };
-
-      const inputArea = document.getElementById("inputArea");
-      const marlaSelect = document.getElementById("marlaSelect");
-      const customUnit = document.getElementById("customUnit");
-      const resultBox = document.getElementById("resultBox");
-      const errorBox = document.getElementById("errorBox");
-      const countryNameSpan = document.getElementById("countryName");
-      const copyButton = document.getElementById("copyButton");
-
-      const reverseUnit = document.getElementById("reverseUnit");
-      const reverseValue = document.getElementById("reverseValue");
-      const reverseResultBox = document.getElementById("reverseResultBox");
-
-      const plotCanvas = document.getElementById("plotCanvas");
-      const ctx = plotCanvas.getContext("2d");
-      const plotLabel = document.getElementById("plotLabel");
-
-      function drawPlot(w, h) {
-        const maxWidth = 360, maxHeight = 240;
-        let scale = Math.min(maxWidth / w, maxHeight / h);
-        const drawW = w * scale, drawH = h * scale;
-        ctx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
-        ctx.fillStyle = "#eee";
-        ctx.fillRect((400 - drawW) / 2, (300 - drawH) / 2, drawW, drawH);
-        ctx.strokeStyle = "#333";
-        ctx.strokeRect((400 - drawW) / 2, (300 - drawH) / 2, drawW, drawH);
-        ctx.fillStyle = "#000";
-        ctx.font = "14px Arial";
-        ctx.fillText(`${w} ft × ${h} ft`, 160, 290);
-        plotLabel.innerText = `Preview of ${w} ft × ${h} ft`;
-      }
-
-      const convert = () => {
-        const rawInput = inputArea.value.trim().toLowerCase();
-        const custom = parseFloat(customUnit.value);
-        const marlaSize = isNaN(custom) ? parseFloat(marlaSelect.value) : custom;
-
-        if (!rawInput) {
-          resultBox.innerHTML = "";
-          errorBox.style.display = "none";
-          ctx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
-          plotLabel.innerText = "Plot preview will appear here";
-          return;
-        }
-
-        let sqft = 0;
-        const dimensionMatch = rawInput.match(/^(\d*\.?\d+)\s*[x×]\s*(\d*\.?\d+)$/);
-        const numberMatch = /^\d*\.?\d+$/.test(rawInput);
-
-        if (dimensionMatch) {
-          const w = parseFloat(dimensionMatch[1]);
-          const h = parseFloat(dimensionMatch[2]);
-          if (!isNaN(w) && !isNaN(h)) {
-            sqft = w * h;
-            drawPlot(w, h);
-          } else {
-            showError("Invalid dimensions entered.");
-            return;
-          }
-        } else if (numberMatch) {
-          sqft = parseFloat(rawInput);
-          ctx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
-          plotLabel.innerText = "Plot preview will appear here";
-        } else {
-          showError("⚠️ Invalid input. Use 2160 or 24x48 format.");
-          return;
-        }
-
-        const marla = sqft / marlaSize;
-        const gaz = sqft / CONVERSION_FACTORS.SQFT_IN_YARD;
-        const sqm = sqft / CONVERSION_FACTORS.SQFT_IN_METER;
-        const kanal = sqft / CONVERSION_FACTORS.SQFT_IN_KANAL;
-        const acre = sqft / CONVERSION_FACTORS.SQFT_IN_ACRE;
-        const hectare = sqft / CONVERSION_FACTORS.SQFT_IN_HECTARE;
-        const bighaPK = sqft / CONVERSION_FACTORS.SQFT_IN_BIGHA_PK;
-        const bighaIN = sqft / CONVERSION_FACTORS.SQFT_IN_BIGHA_IN;
-        const sqin = sqft / CONVERSION_FACTORS.SQFT_IN_INCH;
-        const sqkm = sqft / CONVERSION_FACTORS.SQFT_IN_KM;
-
-        resultBox.innerHTML = `<p><strong>Total Area: ${sqft.toFixed(2)} sq ft</strong></p>
-          <ul>
-            <li>Marla (${marlaSize} sq ft): <strong>${marla.toFixed(2)}</strong></li>
-            <li>Square Yards (Gaz): <strong>${gaz.toFixed(2)}</strong></li>
-            <li>Kanal: <strong>${kanal.toFixed(3)}</strong></li>
-            <li>Acres: <strong>${acre.toFixed(4)}</strong></li>
-            <li>Square Meters: <strong>${sqm.toFixed(2)} m²</strong></li>
-            <li>Hectares: <strong>${hectare.toFixed(5)} ha</strong></li>
-            <li>Bigha (Pakistan): <strong>${bighaPK.toFixed(3)}</strong></li>
-            <li>Bigha (India): <strong>${bighaIN.toFixed(3)}</strong></li>
-            <li>Square Inches: <strong>${sqin.toFixed(0)}</strong></li>
-            <li>Square KM: <strong>${sqkm.toExponential(5)}</strong></li>
-          </ul>`;
-        errorBox.style.display = "none";
-      };
-
-      const showError = (msg) => {
-        errorBox.innerText = msg;
-        errorBox.style.display = "block";
-        resultBox.innerHTML = "";
-        ctx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
-        plotLabel.innerText = "Plot preview will appear here";
-      };
-
-      const copyResults = () => {
-        if (resultBox.innerText) {
-          navigator.clipboard.writeText(resultBox.innerText).then(() => {
-            const original = copyButton.innerText;
-            copyButton.innerText = "Copied!";
-            copyButton.disabled = true;
-            setTimeout(() => {
-              copyButton.innerText = original;
-              copyButton.disabled = false;
-            }, 2000);
-          });
-        }
-      };
-
-      const reverseConversionFactors = {
-        marla: () => parseFloat(customUnit.value) || parseFloat(marlaSelect.value),
-        kanal: CONVERSION_FACTORS.SQFT_IN_KANAL,
-        acre: CONVERSION_FACTORS.SQFT_IN_ACRE,
-        bighaPK: CONVERSION_FACTORS.SQFT_IN_BIGHA_PK,
-        bighaIN: CONVERSION_FACTORS.SQFT_IN_BIGHA_IN
-      };
-
-      const convertReverse = () => {
-        const unit = reverseUnit.value;
-        const val = parseFloat(reverseValue.value);
-        if (!unit || isNaN(val)) {
-          reverseResultBox.innerHTML = "";
-          return;
-        }
-        const factor = typeof reverseConversionFactors[unit] === "function"
-          ? reverseConversionFactors[unit]()
-          : reverseConversionFactors[unit];
-        const sqft = val * factor;
-        reverseResultBox.innerHTML = `<p><strong>${val} ${unit} = ${sqft.toFixed(2)} sq ft</strong></p>
-          <p><small>Use this value in the main input if needed.</small></p>`;
-      };
-
-      inputArea.addEventListener("input", convert);
-      marlaSelect.addEventListener("change", convert);
-      customUnit.addEventListener("input", convert);
-      copyButton.addEventListener("click", copyResults);
-      reverseUnit.addEventListener("change", convertReverse);
-      reverseValue.addEventListener("input", convertReverse);
-
-      fetch("https://ipwho.is/")
-        .then(res => res.json())
-        .then(data => {
-          countryNameSpan.innerText = data.country || "Unknown";
-          marlaSelect.value = data.country_code === "PK" ? "225" :
-                              data.country_code === "GB" ? "250" : "272.25";
-        })
-        .catch(() => { countryNameSpan.innerText = "N/A"; })
-        .finally(convert);
-
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("sw.js");
-      }
-    });
-  </script>
-  <script>
-function drawPlot(areaInput, aspectRatio = 1) {
-  const canvas = document.getElementById('plotCanvas');
-  const label = document.getElementById('plotLabel');
-  const errorBox = document.getElementById('errorBox');
-  const inputArea = document.getElementById('inputArea');
-  if (!canvas || !label) return;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  let width = 0, height = 0;
-  let valid = true;
-  if (/^\d+\s*x\s*\d+$/i.test(areaInput)) {
-    // Format: 24x48
-    [width, height] = areaInput.toLowerCase().split('x').map(Number);
-    document.getElementById('aspectRatioBox').style.display = "none";
-  } else if (!isNaN(Number(areaInput)) && areaInput.trim() !== "") {
-    // Single area, show aspect ratio selector
-    document.getElementById('aspectRatioBox').style.display = "";
-    const area = Number(areaInput);
-    width = Math.sqrt(area * aspectRatio);
-    height = area / width;
-  } else if (areaInput.trim() === "") {
-    label.textContent = "Plot preview will appear here";
-    document.getElementById('aspectRatioBox').style.display = "none";
-    errorBox.style.display = "none";
-    inputArea.style.border = "";
-    return;
-  } else {
-    // Invalid input
-    label.textContent = "Plot preview will appear here";
-    errorBox.textContent = "Please enter a valid area (e.g., 2160 or 24x48)";
-    errorBox.style.display = "block";
-    inputArea.style.border = "2px solid #e74c3c";
-    valid = false;
-  }
-
-  if (valid) {
-    errorBox.style.display = "none";
-    inputArea.style.border = "";
-    // Scale to fit canvas
-    const scale = Math.min(canvas.width / width, canvas.height / height) * 0.8;
-    const plotW = width * scale;
-    const plotH = height * scale;
-    const offsetX = (canvas.width - plotW) / 2;
-    const offsetY = (canvas.height - plotH) / 2;
-
-    ctx.fillStyle = "#3498db";
-    ctx.fillRect(offsetX, offsetY, plotW, plotH);
-
-    ctx.strokeStyle = "#222";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(offsetX, offsetY, plotW, plotH);
-
-    // Draw width and height labels on sides
-    ctx.fillStyle = "#000";
-    ctx.font = "16px Arial";
-    ctx.fillText(`${Math.round(width)} ft`, offsetX + plotW / 2 - 30, offsetY + plotH + 20);
-    ctx.save();
-    ctx.translate(offsetX - 30, offsetY + plotH / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText(`${Math.round(height)} ft`, 0, 0);
-    ctx.restore();
-
-    // Draw dimensions inside rectangle
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 16px Arial";
-    ctx.fillText(`${Math.round(width)} x ${Math.round(height)}`, offsetX + 10, offsetY + 25);
-
-    label.textContent = `Plot: ${Math.round(width)} x ${Math.round(height)} ft`;
-  }
-}
-
-const inputArea = document.getElementById('inputArea');
-const aspectRatioSelect = document.getElementById('aspectRatioSelect');
-
-inputArea.addEventListener('input', function(e) {
-  drawPlot(e.target.value, Number(aspectRatioSelect.value));
-});
-
-aspectRatioSelect.addEventListener('change', function() {
-  drawPlot(inputArea.value, Number(aspectRatioSelect.value));
-});
-
-window.addEventListener('DOMContentLoaded', function() {
-  if (inputArea.value) drawPlot(inputArea.value, Number(aspectRatioSelect.value));
-});
-
-// Download plot as image
-document.getElementById('downloadPlotBtn').addEventListener('click', function() {
-  const canvas = document.getElementById('plotCanvas');
-  const link = document.createElement('a');
-  link.download = 'plot.png';
-  link.href = canvas.toDataURL();
-  link.click();
-});
-
-// --- Preset Plot Sizes ---
-document.querySelectorAll('.preset-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    document.getElementById('inputArea').value = this.getAttribute('data-plot');
-    drawPlot(this.getAttribute('data-plot'), Number(document.getElementById('aspectRatioSelect').value));
-    saveToHistory(this.getAttribute('data-plot'));
-  });
-});
-
-// --- Recent Conversions History ---
-function saveToHistory(areaInput) {
-  let history = JSON.parse(localStorage.getItem('plotHistory') || '[]');
-  if (areaInput && !history.includes(areaInput)) {
-    history.unshift(areaInput);
-    if (history.length > 5) history = history.slice(0, 5);
-    localStorage.setItem('plotHistory', JSON.stringify(history));
-    renderHistory();
-  }
-}
-
-function renderHistory() {
-  let history = JSON.parse(localStorage.getItem('plotHistory') || '[]');
-  const list = document.getElementById('historyList');
-  list.innerHTML = '';
-  history.forEach(item => {
-    const li = document.createElement('li');
-    li.textContent = item;
-    li.style.cursor = 'pointer';
-    li.onclick = function() {
-      document.getElementById('inputArea').value = item;
-      drawPlot(item, Number(document.getElementById('aspectRatioSelect').value));
-    };
-    list.appendChild(li);
-  });
-}
-
-// Save to history on input
-document.getElementById('inputArea').addEventListener('change', function(e) {
-  saveToHistory(e.target.value);
-});
-
-// Initial render
-window.addEventListener('DOMContentLoaded', renderHistory);
-</script>
+    <script src="script.js"></script>
 </body>
 </html>
