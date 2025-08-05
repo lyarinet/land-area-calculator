@@ -35,7 +35,8 @@ Convert land area between sq ft, Marla, Kanal, Acres, Bigha, and more.
 
 ## 🖼️ Screenshot
 
-<img width="551" height="626" alt="image" src="https://github.com/user-attachments/assets/68cadc18-bc8d-428c-a720-2d5d7eae2fc9" />
+<img width="1600" height="1853" alt="image" src="https://github.com/user-attachments/assets/57862a18-9864-4c52-b9f2-212226db3ac0" />
+
 
 
 ## 🛠️ Tech Stack
